@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updatePatient, deletePatient } from "@/app/actions/patients";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Patient } from "@/generated/prisma/client";
 
 interface PatientsTableProps {
@@ -30,11 +31,11 @@ interface PatientsTableProps {
 
 export function RecentPatientsTable({ patients }: PatientsTableProps) {
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Está seguro de que desea eliminar este paciente?")) return;
-
-    const result = await deletePatient(id);
+  async function handleDelete() {
+    if (!deletingId) return;
+    const result = await deletePatient(deletingId);
     if (result.success) {
       toast.success("Paciente eliminado correctamente");
     }
@@ -102,7 +103,7 @@ export function RecentPatientsTable({ patients }: PatientsTableProps) {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() => handleDelete(patient.id)}
+                        onClick={() => setDeletingId(patient.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -114,6 +115,14 @@ export function RecentPatientsTable({ patients }: PatientsTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <ConfirmDialog
+        open={!!deletingId}
+        onOpenChange={(open) => { if (!open) setDeletingId(null); }}
+        title="Eliminar paciente"
+        description="¿Está seguro de que desea eliminar este paciente? Esta acción no se puede deshacer."
+        onConfirm={handleDelete}
+      />
 
       <Dialog
         open={!!editingPatient}

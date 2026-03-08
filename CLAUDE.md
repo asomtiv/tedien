@@ -41,4 +41,4 @@ Root layout (`src/app/layout.tsx`) renders a fixed sidebar + scrollable main con
 
 ### Data models
 
-Two models in `prisma/schema.prisma`: **Patient** (name, dni, phone, email, lastVisit, notes) and **Appointment** (date, reason, status, patientId). Patient.dni is unique.
+Three models in `prisma/schema.prisma`: **Patient** (firstName, lastName, dni, phone, email, lastVisit, notes), **Professional** (firstName, lastName, dni, specialty, licenseNumber, phone, email, color), and **Appointment** (date, reason, status, patientId, professionalId). Patient.dni and Professional.dni are unique. Zod is used for Professional validation.

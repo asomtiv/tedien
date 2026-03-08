@@ -22,12 +22,14 @@ export function AgendaCalendar({ selectedDate }: AgendaCalendarProps) {
 
   return (
     <Card className="h-fit shadow-sm rounded-xl">
-      <CardContent className="p-3">
+      <CardContent className="p-5">
         <Calendar
           mode="single"
           selected={selected}
           onSelect={handleSelect}
           locale={es}
+          className="[--cell-size:--spacing(9)] w-full"
+          classNames={{ root: "w-full" }}
         />
       </CardContent>
     </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale/es";
 import { toast } from "sonner";
@@ -34,36 +34,55 @@ import {
   createAppointment,
   updateAppointment,
 } from "@/app/actions/appointments";
+import { getAllProfessionals } from "@/app/actions/professionals";
 import { cn } from "@/lib/utils";
 
-interface AppointmentWithPatient {
+interface AppointmentWithPatientAndProfessional {
   id: string;
   date: Date;
   reason: string;
   status: string;
   patientId: string;
+  professionalId: string;
   patient: {
     id: string;
     firstName: string;
     lastName: string;
     dni: string;
   };
+  professional: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    specialty: string;
+    color: string;
+  };
 }
+
+type ProfessionalOption = Awaited<ReturnType<typeof getAllProfessionals>>[number];
 
 interface AppointmentFormDialogProps {
   mode: "create" | "edit";
-  appointment?: AppointmentWithPatient;
+  appointment?: AppointmentWithPatientAndProfessional;
   defaultDate?: string;
+  professionals?: ProfessionalOption[];
 }
 
 export function AppointmentFormDialog({
   mode,
   appointment,
   defaultDate,
+  professionals: initialProfessionals,
 }: AppointmentFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [professionals, setProfessionals] = useState<ProfessionalOption[]>(
+    initialProfessionals ?? []
+  );
   const [patientId, setPatientId] = useState<string | null>(
     appointment?.patientId ?? null
+  );
+  const [professionalId, setProfessionalId] = useState<string>(
+    appointment?.professionalId ?? ""
   );
   const [date, setDate] = useState<Date | undefined>(
     appointment ? new Date(appointment.date) : defaultDate ? new Date(defaultDate + "T00:00:00") : new Date()
@@ -81,9 +100,16 @@ export function AppointmentFormDialog({
     ? `${appointment.patient.lastName}, ${appointment.patient.firstName} — DNI: ${appointment.patient.dni}`
     : "";
 
+  useEffect(() => {
+    if (open && professionals.length === 0) {
+      getAllProfessionals().then(setProfessionals);
+    }
+  }, [open, professionals.length]);
+
   function resetForm() {
     if (mode === "create") {
       setPatientId(null);
+      setProfessionalId("");
       setDate(defaultDate ? new Date(defaultDate + "T00:00:00") : new Date());
       setTime("09:00");
       setReason("");
@@ -94,7 +120,7 @@ export function AppointmentFormDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!patientId || !date || !time || !reason) {
+    if (!patientId || !professionalId || !date || !time || !reason) {
       toast.error("Complete todos los campos obligatorios");
       return;
     }
@@ -104,6 +130,7 @@ export function AppointmentFormDialog({
     if (mode === "create") {
       const result = await createAppointment({
         patientId,
+        professionalId,
         date: dateStr,
         time,
         reason,
@@ -119,6 +146,7 @@ export function AppointmentFormDialog({
     } else if (appointment) {
       const result = await updateAppointment(appointment.id, {
         patientId,
+        professionalId,
         date: dateStr,
         time,
         reason,
@@ -172,6 +200,28 @@ export function AppointmentFormDialog({
               onChange={(id) => setPatientId(id)}
               initialLabel={initialLabel}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Profesional *</Label>
+            <Select value={professionalId} onValueChange={(val) => { if (val) setProfessionalId(val); }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar profesional" />
+              </SelectTrigger>
+              <SelectContent>
+                {professionals.map((pro) => (
+                  <SelectItem key={pro.id} value={pro.id}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: pro.color }}
+                      />
+                      {pro.lastName}, {pro.firstName} — {pro.specialty}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

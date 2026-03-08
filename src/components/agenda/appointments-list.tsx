@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Clock, Trash2, CalendarX } from "lucide-react";
@@ -7,19 +8,28 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppointmentFormDialog } from "@/components/agenda/appointment-form-dialog";
 import { deleteAppointment } from "@/app/actions/appointments";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 
-interface AppointmentWithPatient {
+interface AppointmentWithPatientAndProfessional {
   id: string;
   date: Date;
   reason: string;
   status: string;
   patientId: string;
+  professionalId: string;
   patient: {
     id: string;
     firstName: string;
     lastName: string;
     dni: string;
+  };
+  professional: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    specialty: string;
+    color: string;
   };
 }
 
@@ -39,7 +49,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 };
 
 interface AppointmentsListProps {
-  appointments: AppointmentWithPatient[];
+  appointments: AppointmentWithPatientAndProfessional[];
   selectedDate: string;
 }
 
@@ -47,10 +57,11 @@ export function AppointmentsList({
   appointments,
   selectedDate,
 }: AppointmentsListProps) {
-  async function handleDelete(id: string) {
-    if (!confirm("¿Está seguro de que desea eliminar este turno?")) return;
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    const result = await deleteAppointment(id);
+  async function handleDelete() {
+    if (!deletingId) return;
+    const result = await deleteAppointment(deletingId);
     if (result.success) {
       toast.success("Turno eliminado correctamente");
     }
@@ -71,6 +82,7 @@ export function AppointmentsList({
   }
 
   return (
+    <>
     <div className="space-y-3">
       {appointments.map((appointment) => {
         const config = statusConfig[appointment.status] ?? statusConfig.pendiente;
@@ -79,7 +91,8 @@ export function AppointmentsList({
         return (
           <div
             key={appointment.id}
-            className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-accent/50"
+            className="flex items-center gap-4 rounded-xl border-l-4 border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/50"
+            style={{ borderLeftColor: appointment.professional.color }}
           >
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4" />
@@ -93,7 +106,7 @@ export function AppointmentsList({
                 {appointment.patient.lastName}, {appointment.patient.firstName}
               </p>
               <p className="text-sm text-muted-foreground truncate">
-                {appointment.reason}
+                {appointment.reason} — Dr/a. {appointment.professional.lastName}
               </p>
             </div>
 
@@ -113,7 +126,7 @@ export function AppointmentsList({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={() => handleDelete(appointment.id)}
+                onClick={() => setDeletingId(appointment.id)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
@@ -122,5 +135,13 @@ export function AppointmentsList({
         );
       })}
     </div>
+    <ConfirmDialog
+      open={!!deletingId}
+      onOpenChange={(open) => { if (!open) setDeletingId(null); }}
+      title="Eliminar turno"
+      description="¿Está seguro de que desea eliminar este turno? Esta acción no se puede deshacer."
+      onConfirm={handleDelete}
+    />
+    </>
   );
 }

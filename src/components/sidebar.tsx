@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Calendar, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Stethoscope, Package, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
@@ -10,6 +10,8 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Pacientes", href: "/pacientes", icon: Users },
   { label: "Agenda", href: "/agenda", icon: Calendar },
+  { label: "Profesionales", href: "/profesionales", icon: Stethoscope },
+  { label: "Insumos", href: "/insumos", icon: Package },
 ];
 
 function NavLink({

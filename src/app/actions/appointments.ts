@@ -5,13 +5,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function createAppointment(data: {
   patientId: string;
+  professionalId: string;
   date: string;
   time: string;
   reason: string;
   status?: string;
 }) {
-  if (!data.patientId || !data.date || !data.time || !data.reason) {
-    return { error: "Paciente, fecha, hora y motivo son obligatorios" };
+  if (!data.patientId || !data.professionalId || !data.date || !data.time || !data.reason) {
+    return { error: "Paciente, profesional, fecha, hora y motivo son obligatorios" };
   }
 
   const dateTime = new Date(`${data.date}T${data.time}:00`);
@@ -22,6 +23,7 @@ export async function createAppointment(data: {
       reason: data.reason,
       status: data.status || "pendiente",
       patientId: data.patientId,
+      professionalId: data.professionalId,
     },
   });
 
@@ -34,6 +36,7 @@ export async function updateAppointment(
   id: string,
   data: {
     patientId?: string;
+    professionalId?: string;
     date?: string;
     time?: string;
     reason?: string;
@@ -45,6 +48,7 @@ export async function updateAppointment(
   if (data.reason !== undefined) updateData.reason = data.reason;
   if (data.status !== undefined) updateData.status = data.status;
   if (data.patientId !== undefined) updateData.patientId = data.patientId;
+  if (data.professionalId !== undefined) updateData.professionalId = data.professionalId;
 
   if (data.date && data.time) {
     updateData.date = new Date(`${data.date}T${data.time}:00`);

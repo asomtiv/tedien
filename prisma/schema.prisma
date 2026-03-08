@@ -22,11 +22,28 @@ model Patient {
 }
 
 model Appointment {
-  id        String   @id @default(cuid())
-  date      DateTime
-  reason    String
-  status    String   @default("pendiente")
-  patientId String
-  patient   Patient  @relation(fields: [patientId], references: [id])
-  createdAt DateTime @default(now())
+  id             String       @id @default(cuid())
+  date           DateTime
+  reason         String
+  status         String       @default("pendiente")
+  patientId      String
+  patient        Patient      @relation(fields: [patientId], references: [id])
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id])
+  createdAt      DateTime     @default(now())
+}
+
+model Professional {
+  id            String        @id @default(cuid())
+  firstName     String
+  lastName      String
+  dni           String        @unique
+  specialty     String
+  licenseNumber String
+  phone         String
+  email         String?
+  color         String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  appointments  Appointment[]
 }

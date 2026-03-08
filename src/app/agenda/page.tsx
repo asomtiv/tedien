@@ -4,28 +4,49 @@ import { prisma } from "@/lib/prisma";
 import { AgendaCalendar } from "@/components/agenda/agenda-calendar";
 import { AppointmentsList } from "@/components/agenda/appointments-list";
 import { AppointmentFormDialog } from "@/components/agenda/appointment-form-dialog";
+import { ProfessionalFilter } from "@/components/agenda/professional-filter";
 
 export const dynamic = "force-dynamic";
 
 export default async function AgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; professional?: string; specialty?: string }>;
 }) {
   const params = await searchParams;
-  const selectedDate =
-    params.date || format(new Date(), "yyyy-MM-dd");
+  const selectedDate = params.date || format(new Date(), "yyyy-MM-dd");
+  const selectedProfessional = params.professional || "all";
+  const selectedSpecialty = params.specialty || "";
 
   const dayStart = startOfDay(parseISO(selectedDate));
   const dayEnd = endOfDay(parseISO(selectedDate));
 
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      date: { gte: dayStart, lte: dayEnd },
-    },
-    include: { patient: true },
-    orderBy: { date: "asc" },
-  });
+  const whereClause: Record<string, unknown> = {
+    date: { gte: dayStart, lte: dayEnd },
+  };
+  if (selectedProfessional !== "all") {
+    whereClause.professionalId = selectedProfessional;
+  } else if (selectedSpecialty) {
+    whereClause.professional = { specialty: selectedSpecialty };
+  }
+
+  const [appointments, professionals] = await Promise.all([
+    prisma.appointment.findMany({
+      where: whereClause,
+      include: { patient: true, professional: true },
+      orderBy: { date: "asc" },
+    }),
+    prisma.professional.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        specialty: true,
+        color: true,
+      },
+      orderBy: { lastName: "asc" },
+    }),
+  ]);
 
   const formattedDate = format(parseISO(selectedDate), "EEEE d 'de' MMMM, yyyy", {
     locale: es,
@@ -38,10 +59,21 @@ export default async function AgendaPage({
           <h2 className="text-3xl font-bold tracking-tight">Agenda</h2>
           <p className="text-muted-foreground capitalize">{formattedDate}</p>
         </div>
-        <AppointmentFormDialog mode="create" defaultDate={selectedDate} />
+        <div className="flex items-center gap-3">
+          <ProfessionalFilter
+            professionals={professionals}
+            selectedProfessional={selectedProfessional}
+            selectedSpecialty={selectedSpecialty}
+          />
+          <AppointmentFormDialog
+            mode="create"
+            defaultDate={selectedDate}
+            professionals={professionals}
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[320px_1fr]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_3fr]">
         <AgendaCalendar selectedDate={selectedDate} />
         <AppointmentsList
           appointments={appointments}
