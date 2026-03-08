@@ -150,7 +150,6 @@ export function ProfessionalFormDialog({
             <Input
               id="pro-email"
               name="email"
-              type="email"
               defaultValue={professional?.email ?? ""}
               placeholder="profesional@email.com"
             />

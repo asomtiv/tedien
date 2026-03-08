@@ -37,7 +37,7 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
 
   return (
     <>
-      <Card className="relative flex min-h-64 flex-col items-center p-5 pt-8 shadow-sm rounded-xl">
+      <Card className="relative flex min-h-80 flex-col items-center p-7 pt-10 shadow-sm rounded-xl">
         <div className="absolute top-3 right-3">
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
@@ -65,8 +65,8 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
           </AvatarFallback>
         </Avatar>
 
-        <div className="mt-3 flex flex-col items-center text-center">
-          <h3 className="font-semibold leading-tight">
+        <div className="mt-4 flex flex-col items-center text-center">
+          <h3 className="text-base font-semibold leading-tight">
             {professional.lastName}, {professional.firstName}
           </h3>
           <Badge variant="secondary" className="mt-2">
@@ -74,18 +74,18 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
           </Badge>
         </div>
 
-        <div className="mt-4 w-full space-y-1.5 text-xs text-muted-foreground border-t pt-4">
+        <div className="mt-5 w-full space-y-2 text-sm text-muted-foreground border-t pt-4">
           <p className="truncate">
             <span className="font-medium text-foreground">Matricula:</span>{" "}
             {professional.licenseNumber}
           </p>
           <div className="flex items-center gap-1.5 truncate">
-            <Phone className="h-3 w-3 shrink-0" />
+            <Phone className="h-3.5 w-3.5 shrink-0" />
             {professional.phone}
           </div>
           {professional.email && (
             <div className="flex items-center gap-1.5 truncate">
-              <Mail className="h-3 w-3 shrink-0" />
+              <Mail className="h-3.5 w-3.5 shrink-0" />
               {professional.email}
             </div>
           )}

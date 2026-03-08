@@ -11,7 +11,7 @@ const professionalSchema = z.object({
   specialty: z.string().min(1, "Especialidad es obligatoria"),
   licenseNumber: z.string().min(1, "Matricula es obligatoria"),
   phone: z.string().min(1, "Telefono es obligatorio"),
-  email: z.string().email("Email invalido").optional().or(z.literal("")),
+  email: z.string().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Email invalido").optional(),
   color: z.string().min(1, "Color es obligatorio"),
 });
 

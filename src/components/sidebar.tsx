@@ -50,7 +50,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-72 flex-col border-r border-border bg-background">
       <div className="flex h-18 items-center px-7">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
           tedien
         </h1>
       </div>

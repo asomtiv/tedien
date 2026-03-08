@@ -28,7 +28,7 @@ export default async function ProfesionalesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {professionals.map((professional) => (
             <ProfessionalCard
               key={professional.id}
