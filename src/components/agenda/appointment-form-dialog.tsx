@@ -1,0 +1,258 @@
+"use client";
+
+import { useState } from "react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale/es";
+import { toast } from "sonner";
+import { CalendarPlus, Pencil, CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PatientCombobox } from "@/components/agenda/patient-combobox";
+import {
+  createAppointment,
+  updateAppointment,
+} from "@/app/actions/appointments";
+import { cn } from "@/lib/utils";
+
+interface AppointmentWithPatient {
+  id: string;
+  date: Date;
+  reason: string;
+  status: string;
+  patientId: string;
+  patient: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    dni: string;
+  };
+}
+
+interface AppointmentFormDialogProps {
+  mode: "create" | "edit";
+  appointment?: AppointmentWithPatient;
+  defaultDate?: string;
+}
+
+export function AppointmentFormDialog({
+  mode,
+  appointment,
+  defaultDate,
+}: AppointmentFormDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [patientId, setPatientId] = useState<string | null>(
+    appointment?.patientId ?? null
+  );
+  const [date, setDate] = useState<Date | undefined>(
+    appointment ? new Date(appointment.date) : defaultDate ? new Date(defaultDate + "T00:00:00") : new Date()
+  );
+  const [time, setTime] = useState(
+    appointment
+      ? format(new Date(appointment.date), "HH:mm")
+      : "09:00"
+  );
+  const [reason, setReason] = useState(appointment?.reason ?? "");
+  const [status, setStatus] = useState(appointment?.status ?? "pendiente");
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+
+  const initialLabel = appointment
+    ? `${appointment.patient.lastName}, ${appointment.patient.firstName} — DNI: ${appointment.patient.dni}`
+    : "";
+
+  function resetForm() {
+    if (mode === "create") {
+      setPatientId(null);
+      setDate(defaultDate ? new Date(defaultDate + "T00:00:00") : new Date());
+      setTime("09:00");
+      setReason("");
+      setStatus("pendiente");
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!patientId || !date || !time || !reason) {
+      toast.error("Complete todos los campos obligatorios");
+      return;
+    }
+
+    const dateStr = format(date, "yyyy-MM-dd");
+
+    if (mode === "create") {
+      const result = await createAppointment({
+        patientId,
+        date: dateStr,
+        time,
+        reason,
+        status,
+      });
+      if (result.success) {
+        toast.success("Turno creado correctamente");
+        resetForm();
+        setOpen(false);
+      } else {
+        toast.error(result.error);
+      }
+    } else if (appointment) {
+      const result = await updateAppointment(appointment.id, {
+        patientId,
+        date: dateStr,
+        time,
+        reason,
+        status,
+      });
+      if (result.success) {
+        toast.success("Turno actualizado correctamente");
+        setOpen(false);
+      } else {
+        toast.error("Error al actualizar el turno");
+      }
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          mode === "create" ? (
+            <Button />
+          ) : (
+            <Button variant="ghost" size="icon-sm" />
+          )
+        }
+      >
+        {mode === "create" ? (
+          <>
+            <CalendarPlus className="mr-2 h-4 w-4" />
+            Nuevo Turno
+          </>
+        ) : (
+          <Pencil className="h-4 w-4" />
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {mode === "create" ? "Nuevo Turno" : "Editar Turno"}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === "create"
+              ? "Complete los datos para agendar un nuevo turno."
+              : "Modifique los datos del turno."}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <Label>Paciente *</Label>
+            <PatientCombobox
+              value={patientId}
+              onChange={(id) => setPatientId(id)}
+              initialLabel={initialLabel}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Fecha *</Label>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <PopoverTrigger
+                  render={<Button variant="outline" />}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "dd/MM/yyyy") : "Seleccionar"}
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(d) => {
+                      setDate(d);
+                      setDatePickerOpen(false);
+                    }}
+                    locale={es}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="time">Hora *</Label>
+              <Input
+                id="time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reason">Motivo *</Label>
+            <Input
+              id="reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ej: Control, Limpieza, Extraccion..."
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Estado</Label>
+            <Select value={status} onValueChange={(val) => { if (val) setStatus(val); }}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pendiente">Pendiente</SelectItem>
+                <SelectItem value="completado">Completado</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit">
+              {mode === "create" ? "Agendar" : "Guardar"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
