@@ -34,7 +34,7 @@ interface AppointmentWithPatientAndProfessional {
     id: string;
     firstName: string;
     lastName: string;
-    specialty: string;
+    specialty: { name: string };
     color: string;
   };
 }

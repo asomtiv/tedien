@@ -16,13 +16,31 @@ import {
 import { ProfessionalFormDialog } from "@/components/professionals/professional-form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteProfessional } from "@/app/actions/professionals";
-import type { Professional } from "@/generated/prisma/client";
 
-interface ProfessionalCardProps {
-  professional: Professional;
+interface SpecialtyOption {
+  id: string;
+  name: string;
 }
 
-export function ProfessionalCard({ professional }: ProfessionalCardProps) {
+interface ProfessionalWithSpecialty {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dni: string;
+  specialtyId: string;
+  specialty: { name: string };
+  licenseNumber: string;
+  phone: string;
+  email: string | null;
+  color: string;
+}
+
+interface ProfessionalCardProps {
+  professional: ProfessionalWithSpecialty;
+  specialties: SpecialtyOption[];
+}
+
+export function ProfessionalCard({ professional, specialties }: ProfessionalCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const initials =
@@ -70,7 +88,7 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
             {professional.lastName}, {professional.firstName}
           </h3>
           <Badge variant="secondary" className="mt-2">
-            {professional.specialty}
+            {professional.specialty.name}
           </Badge>
         </div>
 
@@ -95,6 +113,7 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
       <ProfessionalFormDialog
         mode="edit"
         professional={professional}
+        specialties={specialties}
         open={editOpen}
         onOpenChange={setEditOpen}
       />

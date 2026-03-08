@@ -6,14 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Tedien — dental clinic management software (MVP). Spanish-language UI (es-AR locale for dates).
 
+## Setup local
+
+1. Crear `.env` en la raíz con `DATABASE_URL="file:./dev.db"`
+2. `npx prisma generate` — regenera el cliente
+3. `npx prisma migrate dev --name init_local` — crea `dev.db` y las tablas
+   - La URL la lee `prisma.config.ts` (via `dotenv`); el `datasource` en `schema.prisma` no lleva `url`
+
 ## Commands
 
 ```bash
 npm run dev       # Start dev server (Turbopack)
 npm run build     # Production build
 npm run lint      # ESLint
-npx prisma db push        # Sync schema to SQLite
+npx prisma db push        # Sync schema to SQLite (sin historial de migraciones)
 npx prisma generate       # Regenerate Prisma client
+npx prisma migrate dev    # Crear y aplicar migración
 npx prisma studio         # Visual DB browser
 ```
 
@@ -42,3 +50,11 @@ Root layout (`src/app/layout.tsx`) renders a fixed sidebar + scrollable main con
 ### Data models
 
 Three models in `prisma/schema.prisma`: **Patient** (firstName, lastName, dni, phone, email, lastVisit, notes), **Professional** (firstName, lastName, dni, specialty, licenseNumber, phone, email, color), and **Appointment** (date, reason, status, patientId, professionalId). Patient.dni and Professional.dni are unique. Zod is used for Professional validation.
+
+### Zod + email validation (Zod v4)
+
+Zod v4 está instalado. `.optional()` solo acepta `undefined`, no `""`. Para campos de email opcionales usar:
+```ts
+email: z.string().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Email invalido").optional()
+```
+La regex custom es necesaria porque `.email()` de Zod v4 rechaza caracteres Unicode (ñ, tildes, etc.).

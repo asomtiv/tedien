@@ -27,13 +27,13 @@ export default async function AgendaPage({
   if (selectedProfessional !== "all") {
     whereClause.professionalId = selectedProfessional;
   } else if (selectedSpecialty) {
-    whereClause.professional = { specialty: selectedSpecialty };
+    whereClause.professional = { specialtyId: selectedSpecialty };
   }
 
   const [appointments, professionals] = await Promise.all([
     prisma.appointment.findMany({
       where: whereClause,
-      include: { patient: true, professional: true },
+      include: { patient: true, professional: { include: { specialty: true } } },
       orderBy: { date: "asc" },
     }),
     prisma.professional.findMany({
@@ -41,7 +41,7 @@ export default async function AgendaPage({
         id: true,
         firstName: true,
         lastName: true,
-        specialty: true,
+        specialty: { select: { id: true, name: true } },
         color: true,
       },
       orderBy: { lastName: "asc" },

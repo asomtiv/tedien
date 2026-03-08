@@ -14,7 +14,7 @@ interface ProfessionalOption {
   id: string;
   firstName: string;
   lastName: string;
-  specialty: string;
+  specialty: { id: string; name: string };
   color: string;
 }
 
@@ -33,7 +33,14 @@ export function ProfessionalFilter({
   const searchParams = useSearchParams();
 
   const isActive = selectedProfessional !== "all" || selectedSpecialty !== "";
-  const specialties = [...new Set(professionals.map((p) => p.specialty))].sort();
+
+  const specialtiesMap = new Map<string, string>();
+  for (const p of professionals) {
+    specialtiesMap.set(p.specialty.id, p.specialty.name);
+  }
+  const specialties = [...specialtiesMap.entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   function selectProfessional(id: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -46,13 +53,13 @@ export function ProfessionalFilter({
     router.replace(`/agenda?${params.toString()}`);
   }
 
-  function selectSpecialty(specialty: string) {
+  function selectSpecialty(id: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("professional");
-    if (specialty === "") {
+    if (id === "") {
       params.delete("specialty");
     } else {
-      params.set("specialty", specialty);
+      params.set("specialty", id);
     }
     router.replace(`/agenda?${params.toString()}`);
   }
@@ -137,14 +144,14 @@ export function ProfessionalFilter({
             )}
             {specialties.map((specialty) => (
               <button
-                key={specialty}
-                onClick={() => selectSpecialty(specialty)}
+                key={specialty.id}
+                onClick={() => selectSpecialty(specialty.id)}
                 className={cn(
                   "w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent",
-                  selectedSpecialty === specialty && "bg-accent font-medium"
+                  selectedSpecialty === specialty.id && "bg-accent font-medium"
                 )}
               >
-                {specialty}
+                {specialty.name}
               </button>
             ))}
           </div>

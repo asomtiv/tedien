@@ -6,15 +6,21 @@ import { ProfessionalFormDialog } from "@/components/professionals/professional-
 export const dynamic = "force-dynamic";
 
 export default async function ProfesionalesPage() {
-  const professionals = await prisma.professional.findMany({
-    orderBy: { lastName: "asc" },
-  });
+  const [professionals, specialties] = await Promise.all([
+    prisma.professional.findMany({
+      include: { specialty: true },
+      orderBy: { lastName: "asc" },
+    }),
+    prisma.specialty.findMany({
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Profesionales</h2>
-        <ProfessionalFormDialog mode="create" />
+        <ProfessionalFormDialog mode="create" specialties={specialties} />
       </div>
 
       {professionals.length === 0 ? (
@@ -33,6 +39,7 @@ export default async function ProfesionalesPage() {
             <ProfessionalCard
               key={professional.id}
               professional={professional}
+              specialties={specialties}
             />
           ))}
         </div>

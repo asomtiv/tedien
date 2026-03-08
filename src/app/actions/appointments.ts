@@ -17,6 +17,25 @@ export async function createAppointment(data: {
 
   const dateTime = new Date(`${data.date}T${data.time}:00`);
 
+  if (dateTime < new Date()) {
+    return { error: "No es posible agendar turnos en fechas o horas pasadas" };
+  }
+
+  const thirtyMin = 30 * 60 * 1000;
+  const windowStart = new Date(dateTime.getTime() - thirtyMin + 1);
+  const windowEnd = new Date(dateTime.getTime() + thirtyMin - 1);
+
+  const conflict = await prisma.appointment.findFirst({
+    where: {
+      professionalId: data.professionalId,
+      date: { gte: windowStart, lte: windowEnd },
+    },
+  });
+
+  if (conflict) {
+    return { error: "El profesional seleccionado ya tiene un turno asignado en este horario" };
+  }
+
   await prisma.appointment.create({
     data: {
       date: dateTime,

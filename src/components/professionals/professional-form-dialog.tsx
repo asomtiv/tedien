@@ -15,14 +15,38 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   createProfessional,
   updateProfessional,
 } from "@/app/actions/professionals";
-import type { Professional } from "@/generated/prisma/client";
+
+interface SpecialtyOption {
+  id: string;
+  name: string;
+}
+
+interface ProfessionalForEdit {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dni: string;
+  specialtyId: string;
+  licenseNumber: string;
+  phone: string;
+  email: string | null;
+  color: string;
+}
 
 interface ProfessionalFormDialogProps {
   mode: "create" | "edit";
-  professional?: Professional;
+  professional?: ProfessionalForEdit;
+  specialties: SpecialtyOption[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -30,14 +54,20 @@ interface ProfessionalFormDialogProps {
 export function ProfessionalFormDialog({
   mode,
   professional,
+  specialties,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
 }: ProfessionalFormDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
   const setOpen = controlledOnOpenChange ?? setInternalOpen;
+  const [specialtyId, setSpecialtyId] = useState(
+    professional?.specialtyId ?? ""
+  );
 
   async function handleSubmit(formData: FormData) {
+    formData.set("specialtyId", specialtyId);
+
     if (mode === "create") {
       const result = await createProfessional(formData);
       if (result?.success) {
@@ -113,14 +143,22 @@ export function ProfessionalFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pro-specialty">Especialidad *</Label>
-              <Input
-                id="pro-specialty"
-                name="specialty"
-                required
-                defaultValue={professional?.specialty ?? ""}
-                placeholder="Ortodoncia"
-              />
+              <Label>Especialidad *</Label>
+              <Select
+                value={specialtyId}
+                onValueChange={(val) => { if (val) setSpecialtyId(val); }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar especialidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {specialties.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

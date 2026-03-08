@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale/es";
 import { toast } from "sonner";
 import { CalendarPlus, Pencil, CalendarIcon } from "lucide-react";
@@ -54,7 +54,7 @@ interface AppointmentWithPatientAndProfessional {
     id: string;
     firstName: string;
     lastName: string;
-    specialty: string;
+    specialty: { name: string };
     color: string;
   };
 }
@@ -216,7 +216,7 @@ export function AppointmentFormDialog({
                         className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: pro.color }}
                       />
-                      {pro.lastName}, {pro.firstName} — {pro.specialty}
+                      {pro.lastName}, {pro.firstName} — {pro.specialty.name}
                     </span>
                   </SelectItem>
                 ))}
@@ -247,6 +247,7 @@ export function AppointmentFormDialog({
                       setDatePickerOpen(false);
                     }}
                     locale={es}
+                    disabled={{ before: startOfToday() }}
                   />
                 </PopoverContent>
               </Popover>

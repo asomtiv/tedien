@@ -33,12 +33,19 @@ model Appointment {
   createdAt      DateTime     @default(now())
 }
 
+model Specialty {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  professionals Professional[]
+}
+
 model Professional {
   id            String        @id @default(cuid())
   firstName     String
   lastName      String
   dni           String        @unique
-  specialty     String
+  specialtyId   String
+  specialty     Specialty     @relation(fields: [specialtyId], references: [id])
   licenseNumber String
   phone         String
   email         String?
