@@ -275,19 +275,21 @@ export function AppointmentFormDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Estado</Label>
-            <Select value={status} onValueChange={(val) => { if (val) setStatus(val); }}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="completado">Completado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {mode === "edit" && (
+            <div className="space-y-2">
+              <Label>Estado</Label>
+              <Select value={status} onValueChange={(val) => { if (val) setStatus(val); }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendiente">Pendiente</SelectItem>
+                  <SelectItem value="completado">Completado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <Button

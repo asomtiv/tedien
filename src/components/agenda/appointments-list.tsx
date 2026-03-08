@@ -5,10 +5,16 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Clock, Trash2, CalendarX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AppointmentFormDialog } from "@/components/agenda/appointment-form-dialog";
-import { deleteAppointment } from "@/app/actions/appointments";
+import { deleteAppointment, updateAppointment } from "@/app/actions/appointments";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface AppointmentWithPatientAndProfessional {
@@ -110,12 +116,28 @@ export function AppointmentsList({
               </p>
             </div>
 
-            <Badge
-              variant="outline"
-              className={cn("border-transparent shrink-0", config.className)}
+            <Select
+              value={appointment.status}
+              onValueChange={async (val) => {
+                if (!val) return;
+                await updateAppointment(appointment.id, { status: val });
+                toast.success("Estado actualizado");
+              }}
             >
-              {config.label}
-            </Badge>
+              <SelectTrigger
+                className={cn(
+                  "h-7 w-auto shrink-0 gap-1.5 border-transparent px-2.5 text-xs font-medium capitalize",
+                  config.className
+                )}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pendiente">Pendiente</SelectItem>
+                <SelectItem value="completado">Completado</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
 
             <div className="flex items-center gap-1 shrink-0">
               <AppointmentFormDialog
