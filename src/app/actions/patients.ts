@@ -16,7 +16,10 @@ export async function createPatient(formData: FormData) {
   }
 
   await prisma.patient.create({
-    data: { firstName, lastName, dni, phone, email, notes },
+    data: {
+      firstName, lastName, dni, phone, email, notes,
+      clinicalHistory: { create: {} },
+    },
   });
 
   revalidatePath("/pacientes");

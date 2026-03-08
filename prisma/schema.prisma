@@ -18,7 +18,8 @@ model Patient {
   notes        String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  appointments Appointment[]
+  appointments    Appointment[]
+  clinicalHistory ClinicalHistory?
 }
 
 model Appointment {
@@ -53,4 +54,34 @@ model Professional {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   appointments  Appointment[]
+  evolutions    Evolution[]
+}
+
+model ClinicalHistory {
+  id              String      @id @default(cuid())
+  patientId       String      @unique
+  patient         Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  bloodType       String?
+  chronicDiseases String?
+  generalNotes       String?
+  allergies          String?
+  currentMedications String?
+  initialized        Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  evolutions         Evolution[]
+}
+
+model Evolution {
+  id             String          @id @default(cuid())
+  historyId      String
+  history        ClinicalHistory @relation(fields: [historyId], references: [id], onDelete: Cascade)
+  professionalId String
+  professional   Professional    @relation(fields: [professionalId], references: [id])
+  date           DateTime        @default(now())
+  treatment      String
+  description    String
+  tooth          String?
+  face           String
+  createdAt      DateTime        @default(now())
 }
