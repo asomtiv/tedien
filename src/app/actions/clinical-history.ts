@@ -10,6 +10,7 @@ export async function initializeClinicalHistory(
     chronicDiseases: string;
     allergies: string;
     currentMedications: string;
+    generalNotes: string;
   }
 ) {
   const history = await prisma.clinicalHistory.findUnique({
@@ -31,6 +32,7 @@ export async function initializeClinicalHistory(
       chronicDiseases: data.chronicDiseases || null,
       allergies: data.allergies || null,
       currentMedications: data.currentMedications || null,
+      generalNotes: data.generalNotes || null,
       initialized: true,
     },
   });

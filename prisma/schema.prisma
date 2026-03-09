@@ -28,7 +28,7 @@ model Appointment {
   reason         String
   status         String       @default("pendiente")
   patientId      String
-  patient        Patient      @relation(fields: [patientId], references: [id])
+  patient        Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
   professionalId String
   professional   Professional @relation(fields: [professionalId], references: [id])
   createdAt      DateTime     @default(now())
@@ -85,6 +85,6 @@ model Evolution {
   tooth          String?
   face           String
   appointmentId  String?         @unique
-  appointment    Appointment?    @relation(fields: [appointmentId], references: [id])
+  appointment    Appointment?    @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   createdAt      DateTime        @default(now())
 }

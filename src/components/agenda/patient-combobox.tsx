@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { searchPatients } from "@/app/actions/appointments";
 import { cn } from "@/lib/utils";
 
@@ -27,18 +28,22 @@ export function PatientCombobox({
   const [results, setResults] = useState<PatientOption[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isSelected, setIsSelected] = useState(!!value);
+  const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isSelected || query.length < 1) {
       setResults([]);
+      setLoading(false);
       return;
     }
 
+    setLoading(true);
     const timeout = setTimeout(async () => {
       const patients = await searchPatients(query);
       setResults(patients);
       setIsOpen(patients.length > 0);
+      setLoading(false);
     }, 300);
 
     return () => clearTimeout(timeout);
@@ -75,15 +80,23 @@ export function PatientCombobox({
 
   return (
     <div ref={containerRef} className="relative">
-      <Input
-        value={query}
-        onChange={handleInputChange}
-        onFocus={() => {
-          if (results.length > 0 && !isSelected) setIsOpen(true);
-        }}
-        placeholder="Buscar por nombre o DNI..."
-        autoComplete="off"
-      />
+      <div className="relative">
+        <Input
+          value={query}
+          onChange={handleInputChange}
+          onFocus={() => {
+            if (results.length > 0 && !isSelected) setIsOpen(true);
+          }}
+          placeholder="Buscar por nombre o DNI..."
+          autoComplete="off"
+          className="pr-8"
+        />
+        {loading && (
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Spinner />
+          </span>
+        )}
+      </div>
       {isOpen && (
         <div className="absolute z-50 mt-1 w-full rounded-lg border bg-popover p-1 shadow-md">
           {results.map((patient) => (

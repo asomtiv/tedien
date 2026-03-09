@@ -26,7 +26,7 @@ export default async function DashboardPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <p className="text-muted-foreground">
-          Resumen general de la clinica
+        Reportes generales
         </p>
       </div>
 

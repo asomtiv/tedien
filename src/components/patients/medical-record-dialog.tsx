@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { searchPatients } from "@/app/actions/appointments";
 import { cn } from "@/lib/utils";
 
@@ -30,16 +31,21 @@ export function MedicalRecordDialog() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PatientResult[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<PatientResult | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (query.length < 1) {
       setResults([]);
+      setLoading(false);
       return;
     }
 
+    setLoading(true);
     const timeout = setTimeout(async () => {
       const patients = await searchPatients(query);
       setResults(patients);
+      setLoading(false);
     }, 300);
 
     return () => clearTimeout(timeout);
@@ -51,6 +57,7 @@ export function MedicalRecordDialog() {
       setQuery("");
       setResults([]);
       setSelectedId(null);
+      setSelectedPatient(null);
     }
   }
 
@@ -74,24 +81,34 @@ export function MedicalRecordDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <Input
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setSelectedId(null);
-          }}
-          placeholder="Buscar por nombre o DNI..."
-          autoComplete="off"
-          autoFocus
-        />
+        {!selectedId && (
+          <div className="relative">
+            <Input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSelectedId(null);
+              }}
+              placeholder="Buscar por nombre o DNI..."
+              autoComplete="off"
+              autoFocus
+              className="pr-8"
+            />
+            {loading && (
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <Spinner />
+              </span>
+            )}
+          </div>
+        )}
 
-        {results.length > 0 && (
+        {results.length > 0 && !selectedId && (
           <div className="max-h-60 overflow-y-auto rounded-lg border">
             {results.map((patient) => (
               <button
                 key={patient.id}
                 type="button"
-                onClick={() => setSelectedId(patient.id)}
+                onClick={() => { setSelectedId(patient.id); setSelectedPatient(patient); }}
                 className={cn(
                   "flex w-full items-center px-3 py-2.5 text-sm transition-colors hover:bg-accent",
                   selectedId === patient.id && "bg-accent font-medium"
@@ -103,7 +120,13 @@ export function MedicalRecordDialog() {
           </div>
         )}
 
-        {query.length > 0 && results.length === 0 && (
+        {selectedPatient && (
+          <p className="text-sm font-medium">
+            {selectedPatient.lastName}, {selectedPatient.firstName} — DNI: {selectedPatient.dni}
+          </p>
+        )}
+
+        {query.length > 0 && results.length === 0 && !selectedId && (
           <p className="text-sm text-muted-foreground text-center py-4">
             No se encontraron pacientes
           </p>

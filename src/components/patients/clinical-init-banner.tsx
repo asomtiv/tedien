@@ -30,6 +30,7 @@ export function ClinicalInitBanner({ historyId }: ClinicalInitBannerProps) {
   const [chronicDiseases, setChronicDiseases] = useState("");
   const [allergies, setAllergies] = useState("");
   const [currentMedications, setCurrentMedications] = useState("");
+  const [generalNotes, setGeneralNotes] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +41,7 @@ export function ClinicalInitBanner({ historyId }: ClinicalInitBannerProps) {
       chronicDiseases,
       allergies,
       currentMedications,
+      generalNotes,
     });
 
     setLoading(false);
@@ -135,6 +137,18 @@ export function ClinicalInitBanner({ historyId }: ClinicalInitBannerProps) {
                 className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="generalNotes">Notas Generales</Label>
+            <textarea
+              id="generalNotes"
+              value={generalNotes}
+              onChange={(e) => setGeneralNotes(e.target.value)}
+              placeholder="Observaciones adicionales relevantes para el tratamiento..."
+              rows={3}
+              className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
