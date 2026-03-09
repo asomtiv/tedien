@@ -6,8 +6,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ClinicalInitBanner } from "@/components/patients/clinical-init-banner";
+import { EvolutionFormDialog } from "@/components/patients/evolution-form-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +24,10 @@ export default async function PatientDetailPage({
       clinicalHistory: {
         include: {
           evolutions: {
-            include: { professional: { select: { firstName: true, lastName: true } } },
-            orderBy: { date: "desc" },
+            include: {
+              professional: { select: { firstName: true, lastName: true } },
+            },
+            orderBy: { createdAt: "desc" },
           },
         },
       },
@@ -115,7 +117,13 @@ export default async function PatientDetailPage({
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Evoluciones</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Evoluciones</h3>
+          {history && history.initialized && (
+            <EvolutionFormDialog historyId={history.id} patientId={id} />
+          )}
+        </div>
+
         {!history || history.evolutions.length === 0 ? (
           <Card className="flex items-center justify-center p-8">
             <p className="text-sm text-muted-foreground">
@@ -123,32 +131,40 @@ export default async function PatientDetailPage({
             </p>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {history.evolutions.map((evo) => (
-              <Card key={evo.id} className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">
-                    {format(evo.date, "dd/MM/yyyy HH:mm", { locale: es })}
-                  </span>
-                  <Badge variant="secondary">
-                    {evo.professional.lastName}, {evo.professional.firstName}
-                  </Badge>
-                </div>
-                <p className="text-sm">
-                  <span className="font-medium">Tratamiento:</span> {evo.treatment}
-                </p>
-                <p className="text-sm text-muted-foreground">{evo.description}</p>
-                {evo.tooth && (
-                  <p className="text-sm">
-                    <span className="font-medium">Pieza:</span> {evo.tooth}
-                  </p>
-                )}
-                <p className="text-sm">
-                  <span className="font-medium">Cara:</span> {evo.face}
-                </p>
-              </Card>
-            ))}
-          </div>
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Fecha</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Profesional</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Tratamiento</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Pieza / Cara</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.evolutions.map((evo) => (
+                    <tr key={evo.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {format(evo.date, "dd/MM/yyyy HH:mm", { locale: es })}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {evo.professional.lastName}, {evo.professional.firstName}
+                      </td>
+                      <td className="px-4 py-3">{evo.treatment}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {evo.tooth ? `${evo.tooth} — ${evo.face}` : evo.face}
+                      </td>
+                      <td className="px-4 py-3 max-w-xs">
+                        <span className="line-clamp-2">{evo.description || "—"}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         )}
       </div>
     </div>

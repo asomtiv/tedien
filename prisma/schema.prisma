@@ -32,6 +32,7 @@ model Appointment {
   professionalId String
   professional   Professional @relation(fields: [professionalId], references: [id])
   createdAt      DateTime     @default(now())
+  evolution      Evolution?
 }
 
 model Specialty {
@@ -83,5 +84,7 @@ model Evolution {
   description    String
   tooth          String?
   face           String
+  appointmentId  String?         @unique
+  appointment    Appointment?    @relation(fields: [appointmentId], references: [id])
   createdAt      DateTime        @default(now())
 }

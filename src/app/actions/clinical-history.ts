@@ -38,3 +38,75 @@ export async function initializeClinicalHistory(
   revalidatePath(`/pacientes/${history.patientId}`);
   return { success: true };
 }
+
+export async function getUnlinkedAppointments(patientId: string) {
+  return prisma.appointment.findMany({
+    where: {
+      patientId,
+      evolution: null,
+    },
+    select: {
+      id: true,
+      date: true,
+      reason: true,
+      professional: {
+        select: { id: true, firstName: true, lastName: true },
+      },
+    },
+    orderBy: { date: "desc" },
+  });
+}
+
+export async function createEvolution(data: {
+  historyId: string;
+  appointmentId: string;
+  professionalId: string;
+  treatment: string;
+  description: string;
+  tooth?: string;
+  face: string;
+}) {
+  if (!data.historyId || !data.appointmentId || !data.professionalId || !data.treatment || !data.face) {
+    return { error: "Turno, profesional, tratamiento y cara son obligatorios" };
+  }
+
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: data.appointmentId },
+  });
+
+  if (!appointment) {
+    return { error: "Turno no encontrado" };
+  }
+
+  const existing = await prisma.evolution.findUnique({
+    where: { appointmentId: data.appointmentId },
+  });
+
+  if (existing) {
+    return { error: "Este turno ya tiene una evolución registrada" };
+  }
+
+  const history = await prisma.clinicalHistory.findUnique({
+    where: { id: data.historyId },
+  });
+
+  if (!history) {
+    return { error: "Historia clínica no encontrada" };
+  }
+
+  await prisma.evolution.create({
+    data: {
+      historyId: data.historyId,
+      appointmentId: data.appointmentId,
+      professionalId: data.professionalId,
+      date: appointment.date,
+      treatment: data.treatment,
+      description: data.description || "",
+      tooth: data.tooth || null,
+      face: data.face,
+    },
+  });
+
+  revalidatePath(`/pacientes/${history.patientId}`);
+  return { success: true };
+}
