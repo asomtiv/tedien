@@ -1,4 +1,4 @@
-import { format, startOfDay, endOfDay, parseISO } from "date-fns";
+import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { es } from "date-fns/locale/es";
 import { prisma } from "@/lib/prisma";
 import { AgendaCalendar } from "@/components/agenda/agenda-calendar";
@@ -18,8 +18,11 @@ export default async function AgendaPage({
   const selectedProfessional = params.professional || "all";
   const selectedSpecialty = params.specialty || "";
 
-  const dayStart = startOfDay(parseISO(selectedDate));
-  const dayEnd = endOfDay(parseISO(selectedDate));
+  const selectedDay = parseISO(selectedDate);
+  const dayStart = startOfDay(selectedDay);
+  const dayEnd = endOfDay(selectedDay);
+  const monthStart = startOfMonth(selectedDay);
+  const monthEnd = endOfMonth(selectedDay);
 
   const whereClause: Record<string, unknown> = {
     date: { gte: dayStart, lte: dayEnd },
@@ -30,7 +33,7 @@ export default async function AgendaPage({
     whereClause.professional = { specialtyId: selectedSpecialty };
   }
 
-  const [appointments, professionals] = await Promise.all([
+  const [appointments, professionals, monthAppointments] = await Promise.all([
     prisma.appointment.findMany({
       where: whereClause,
       include: { patient: true, professional: { include: { specialty: true } } },
@@ -46,9 +49,15 @@ export default async function AgendaPage({
       },
       orderBy: { lastName: "asc" },
     }),
+    prisma.appointment.findMany({
+      where: { date: { gte: monthStart, lte: monthEnd } },
+      select: { date: true },
+    }),
   ]);
 
-  const formattedDate = format(parseISO(selectedDate), "EEEE d 'de' MMMM, yyyy", {
+  const appointmentDates = monthAppointments.map((a) => a.date);
+
+  const formattedDate = format(selectedDay, "EEEE d 'de' MMMM, yyyy", {
     locale: es,
   });
 
@@ -74,7 +83,7 @@ export default async function AgendaPage({
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_3fr]">
-        <AgendaCalendar selectedDate={selectedDate} />
+        <AgendaCalendar selectedDate={selectedDate} appointmentDates={appointmentDates} />
         <AppointmentsList
           appointments={appointments}
           selectedDate={selectedDate}
