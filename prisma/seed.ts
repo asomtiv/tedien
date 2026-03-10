@@ -7,12 +7,20 @@ const prisma = new PrismaClient({
 
 const specialties = [
   "Odontología General",
-  "Ortodoncia",
-  "Endodoncia",
-  "Implantología",
-  "Periodoncia",
-  "Odontopediatría",
   "Cirugía",
+  "Endodoncia",
+  "Ortodoncia",
+  "Odontopediatría",
+  "Prótesis Removible",
+  "Implantes",
+];
+
+const categories = [
+  "Descartables",
+  "Anestesia",
+  "Resinas",
+  "Instrumental",
+  "Ortodoncia",
 ];
 
 async function main() {
@@ -24,6 +32,15 @@ async function main() {
     });
   }
   console.log(`Seeded ${specialties.length} specialties`);
+
+  for (const name of categories) {
+    await prisma.category.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+  console.log(`Seeded ${categories.length} categories`);
 }
 
 main()

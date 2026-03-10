@@ -88,3 +88,38 @@ model Evolution {
   appointment    Appointment?    @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   createdAt      DateTime        @default(now())
 }
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id             String            @id @default(cuid())
+  name           String
+  stock          Int
+  minStock       Int               @default(5)
+  unit           String
+  expirationDate DateTime?
+  categoryId     String
+  category       Category          @relation(fields: [categoryId], references: [id])
+  movements      ProductMovement[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model ProductMovement {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type           String
+  quantity       Int
+  reason         String
+  appointmentId  String?
+  patientId      String?
+  professionalId String?
+  createdAt      DateTime @default(now())
+}
