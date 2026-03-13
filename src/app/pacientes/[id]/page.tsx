@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ClinicalInitBanner } from "@/components/patients/clinical-init-banner";
 import { EvolutionFormDialog } from "@/components/patients/evolution-form-dialog";
+import { OdontogramSection } from "@/components/patients/odontogram-section";
 
 export const dynamic = "force-dynamic";
 
@@ -115,6 +116,13 @@ export default async function PatientDetailPage({
           )}
         </Card>
       </div>
+
+      {history && history.initialized && (
+        <OdontogramSection
+          historyId={history.id}
+          initialData={history.odontogramData}
+        />
+      )}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

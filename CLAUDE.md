@@ -47,9 +47,25 @@ npx prisma studio         # Visual DB browser
 
 Root layout (`src/app/layout.tsx`) renders a fixed sidebar + scrollable main content area. All routes are nested inside this shell — no auth layer.
 
+### Odontogram
+
+Interactive SVG dental chart in `src/components/odontogram/`. Uses FDI numbering, 5 faces per tooth (polygon-based), tooth-level overlays (extraction, absent, crown), and prosthesis grouping. Built with `@base-ui/react/popover` for tooth popovers. Integrated into patient page via `OdontogramSection` — saved once per clinical history (`odontogramData` JSON field), then read-only.
+
 ### Data models
 
-Three models in `prisma/schema.prisma`: **Patient** (firstName, lastName, dni, phone, email, lastVisit, notes), **Professional** (firstName, lastName, dni, specialty, licenseNumber, phone, email, color), and **Appointment** (date, reason, status, patientId, professionalId). Patient.dni and Professional.dni are unique. Zod is used for Professional validation.
+Models in `prisma/schema.prisma`:
+
+- **Patient** (firstName, lastName, dni, phone, email, lastVisit, notes) — `dni` unique
+- **Professional** (firstName, lastName, dni, specialtyId, licenseNumber, phone, email, color) — `dni` unique
+- **Specialty** (name) — `name` unique, related to Professional
+- **Appointment** (date, reason, status, patientId, professionalId) — optional link to Evolution
+- **ClinicalHistory** (patientId, bloodType, chronicDiseases, generalNotes, allergies, currentMedications, initialized, odontogramData) — one per patient, `odontogramData` stores JSON odontogram state (write-once)
+- **Evolution** (historyId, professionalId, treatment, description, tooth, face, appointmentId) — clinical notes linked to history
+- **Category** (name) — `name` unique, for inventory products
+- **Product** (name, stock, minStock, unit, expirationDate, categoryId) — inventory items
+- **ProductMovement** (productId, type, quantity, reason, appointmentId, patientId, professionalId) — stock movement log
+
+Zod is used for Professional validation.
 
 ### Zod + email validation (Zod v4)
 

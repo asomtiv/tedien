@@ -124,7 +124,9 @@ export function NewProductDialog({ categories }: NewProductDialogProps) {
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar" />
+                  <SelectValue placeholder="Seleccionar">
+                    {categories.find((c) => c.id === categoryId)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (

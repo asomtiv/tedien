@@ -41,6 +41,38 @@ export async function initializeClinicalHistory(
   return { success: true };
 }
 
+export async function saveOdontogram(historyId: string, data: string) {
+  const history = await prisma.clinicalHistory.findUnique({
+    where: { id: historyId },
+  });
+
+  if (!history) {
+    return { error: "Historia clínica no encontrada" };
+  }
+
+  if (!history.initialized) {
+    return { error: "La ficha médica debe completarse antes del odontograma" };
+  }
+
+  if (history.odontogramData !== null) {
+    return { error: "El odontograma ya fue registrado" };
+  }
+
+  try {
+    JSON.parse(data);
+  } catch {
+    return { error: "Datos de odontograma inválidos" };
+  }
+
+  await prisma.clinicalHistory.update({
+    where: { id: historyId },
+    data: { odontogramData: data },
+  });
+
+  revalidatePath(`/pacientes/${history.patientId}`);
+  return { success: true };
+}
+
 export async function getUnlinkedAppointments(patientId: string) {
   return prisma.appointment.findMany({
     where: {

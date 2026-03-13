@@ -100,7 +100,7 @@ export function InventoryDashboard({
   }, [products, search, categoryFilter]);
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[5fr_7fr]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <div className="relative max-w-sm flex-1">
@@ -114,7 +114,7 @@ export function InventoryDashboard({
           </div>
           <Select
             value={categoryFilter}
-            onValueChange={(val) => setCategoryFilter(val)}
+            onValueChange={(val) => { if (val !== null) setCategoryFilter(val); }}
           >
             <SelectTrigger className="w-48">
               <SelectValue>

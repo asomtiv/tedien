@@ -93,7 +93,6 @@ export function AppointmentFormDialog({
       : "09:00"
   );
   const [reason, setReason] = useState(appointment?.reason ?? "");
-  const [status, setStatus] = useState(appointment?.status ?? "pendiente");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const initialLabel = appointment
@@ -113,7 +112,6 @@ export function AppointmentFormDialog({
       setDate(defaultDate ? new Date(defaultDate + "T00:00:00") : new Date());
       setTime("09:00");
       setReason("");
-      setStatus("pendiente");
     }
   }
 
@@ -134,7 +132,6 @@ export function AppointmentFormDialog({
         date: dateStr,
         time,
         reason,
-        status,
       });
       if (result.success) {
         toast.success("Turno creado correctamente");
@@ -150,7 +147,6 @@ export function AppointmentFormDialog({
         date: dateStr,
         time,
         reason,
-        status,
       });
       if (result.success) {
         toast.success("Turno actualizado correctamente");
@@ -206,7 +202,12 @@ export function AppointmentFormDialog({
             <Label>Profesional *</Label>
             <Select value={professionalId} onValueChange={(val) => { if (val) setProfessionalId(val); }}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar profesional" />
+                <SelectValue placeholder="Seleccionar profesional">
+                  {(() => {
+                    const pro = professionals.find((p) => p.id === professionalId);
+                    return pro ? `${pro.lastName}, ${pro.firstName} — ${pro.specialty.name}` : undefined;
+                  })()}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {professionals.map((pro) => (
@@ -275,22 +276,6 @@ export function AppointmentFormDialog({
               required
             />
           </div>
-
-          {mode === "edit" && (
-            <div className="space-y-2">
-              <Label>Estado</Label>
-              <Select value={status} onValueChange={(val) => { if (val) setStatus(val); }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pendiente">Pendiente</SelectItem>
-                  <SelectItem value="completado">Completado</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <Button

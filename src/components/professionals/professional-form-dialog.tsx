@@ -149,7 +149,9 @@ export function ProfessionalFormDialog({
                 onValueChange={(val) => { if (val) setSpecialtyId(val); }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar especialidad" />
+                  <SelectValue placeholder="Seleccionar especialidad">
+                    {specialties.find((s) => s.id === specialtyId)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {specialties.map((s) => (
