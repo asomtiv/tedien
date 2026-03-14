@@ -8,18 +8,25 @@ datasource db {
 }
 
 model Patient {
-  id           String        @id @default(cuid())
-  firstName    String
-  lastName     String
-  dni          String        @unique
-  phone        String?
-  email        String?
-  lastVisit    DateTime?
-  notes        String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  appointments    Appointment[]
-  clinicalHistory ClinicalHistory?
+  id                String           @id @default(cuid())
+  firstName         String
+  lastName          String
+  dni               String           @unique
+  phone             String?
+  email             String?
+  lastVisit         DateTime?
+  notes             String?
+  address           String?
+  locality          String?
+  birthDate         DateTime?
+  provinceId        String?
+  province          Province?        @relation(fields: [provinceId], references: [id])
+  socialInsuranceId String?
+  socialInsurance   SocialInsurance? @relation(fields: [socialInsuranceId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  appointments      Appointment[]
+  clinicalHistory   ClinicalHistory?
 }
 
 model Appointment {
@@ -59,11 +66,11 @@ model Professional {
 }
 
 model ClinicalHistory {
-  id              String      @id @default(cuid())
-  patientId       String      @unique
-  patient         Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  bloodType       String?
-  chronicDiseases String?
+  id                 String      @id @default(cuid())
+  patientId          String      @unique
+  patient            Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  bloodType          String?
+  chronicDiseases    String?
   generalNotes       String?
   allergies          String?
   currentMedications String?
@@ -123,4 +130,16 @@ model ProductMovement {
   patientId      String?
   professionalId String?
   createdAt      DateTime @default(now())
+}
+
+model Province {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  patients Patient[]
+}
+
+model SocialInsurance {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  patients Patient[]
 }

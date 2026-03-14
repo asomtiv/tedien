@@ -99,7 +99,7 @@ export function InventoryTable({ products }: InventoryTableProps) {
 
   return (
     <>
-      <div className="rounded-xl border bg-card shadow-sm">
+      <div className="rounded-xl border border-amber-200/60 bg-amber-50/40 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/20">
         <Table>
           <TableHeader>
             <TableRow>

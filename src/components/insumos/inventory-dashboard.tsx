@@ -100,8 +100,9 @@ export function InventoryDashboard({
   }, [products, search, categoryFilter]);
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
+    <div className="space-y-8">
       <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Stock</h2>
         <div className="flex items-center gap-3">
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

@@ -108,6 +108,14 @@ export async function updateStock(
   return { success: true };
 }
 
+export async function getAvailableProducts() {
+  return prisma.product.findMany({
+    where: { stock: { gt: 0 } },
+    select: { id: true, name: true, stock: true, unit: true },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function deleteProduct(id: string) {
   await prisma.product.delete({
     where: { id },

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale/es";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,9 +26,16 @@ import {
 } from "@/components/ui/select";
 import { getUnlinkedAppointments, createEvolution } from "@/app/actions/clinical-history";
 import { getAllProfessionals } from "@/app/actions/professionals";
+import { getAvailableProducts } from "@/app/actions/inventory";
 
 type UnlinkedAppointment = Awaited<ReturnType<typeof getUnlinkedAppointments>>[number];
 type ProfessionalOption = Awaited<ReturnType<typeof getAllProfessionals>>[number];
+type ProductOption = Awaited<ReturnType<typeof getAvailableProducts>>[number];
+
+interface SelectedInsumo {
+  productId: string;
+  quantity: number;
+}
 
 interface EvolutionFormDialogProps {
   historyId: string;
@@ -41,6 +48,7 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
   const [loading, setLoading] = useState(false);
   const [appointments, setAppointments] = useState<UnlinkedAppointment[]>([]);
   const [professionals, setProfessionals] = useState<ProfessionalOption[]>([]);
+  const [products, setProducts] = useState<ProductOption[]>([]);
 
   const [appointmentId, setAppointmentId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
@@ -48,15 +56,18 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
   const [tooth, setTooth] = useState("");
   const [face, setFace] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedInsumos, setSelectedInsumos] = useState<SelectedInsumo[]>([]);
 
   useEffect(() => {
     if (open) {
       Promise.all([
         getUnlinkedAppointments(patientId),
         getAllProfessionals(),
-      ]).then(([appts, pros]) => {
+        getAvailableProducts(),
+      ]).then(([appts, pros, prods]) => {
         setAppointments(appts);
         setProfessionals(pros);
+        setProducts(prods);
       });
     }
   }, [open, patientId]);
@@ -77,7 +88,24 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
     setTooth("");
     setFace("");
     setDescription("");
+    setSelectedInsumos([]);
   }
+
+  function addInsumo() {
+    setSelectedInsumos((prev) => [...prev, { productId: "", quantity: 1 }]);
+  }
+
+  function removeInsumo(index: number) {
+    setSelectedInsumos((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateInsumo(index: number, field: keyof SelectedInsumo, value: string | number) {
+    setSelectedInsumos((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  }
+
+  const selectedProductIds = new Set(selectedInsumos.map((i) => i.productId).filter(Boolean));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,6 +117,8 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
 
     setLoading(true);
 
+    const insumos = selectedInsumos.filter((i) => i.productId && i.quantity > 0);
+
     const result = await createEvolution({
       historyId,
       appointmentId,
@@ -97,6 +127,7 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
       description,
       tooth: tooth || undefined,
       face,
+      insumos: insumos.length > 0 ? insumos : undefined,
     });
 
     setLoading(false);
@@ -116,7 +147,7 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
       <DialogTrigger render={<Button size="icon-sm" />}>
         <Plus className="h-4 w-4" />
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nueva Evolución</DialogTitle>
           <DialogDescription>
@@ -134,7 +165,14 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
             ) : (
               <Select value={appointmentId} onValueChange={handleAppointmentChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar turno" />
+                  <SelectValue placeholder="Seleccionar turno">
+                    {(() => {
+                      const appt = appointments.find((a) => a.id === appointmentId);
+                      return appt
+                        ? `${format(new Date(appt.date), "dd/MM/yyyy HH:mm", { locale: es })} — ${appt.reason} (Dr. ${appt.professional.lastName})`
+                        : undefined;
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {appointments.map((appt) => (
@@ -159,7 +197,12 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
               onValueChange={(val) => { if (val) setProfessionalId(val); }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar profesional" />
+                <SelectValue placeholder="Seleccionar profesional">
+                  {(() => {
+                    const pro = professionals.find((p) => p.id === professionalId);
+                    return pro ? `${pro.lastName}, ${pro.firstName}` : undefined;
+                  })()}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {professionals.map((pro) => (
@@ -218,6 +261,69 @@ export function EvolutionFormDialog({ historyId, patientId }: EvolutionFormDialo
               rows={3}
               className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
             />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Insumos Utilizados</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addInsumo}
+                disabled={products.length === 0}
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                Agregar
+              </Button>
+            </div>
+            {selectedInsumos.map((insumo, index) => {
+              const product = products.find((p) => p.id === insumo.productId);
+              const availableProducts = products.filter(
+                (p) => p.id === insumo.productId || !selectedProductIds.has(p.id)
+              );
+              return (
+                <div key={index} className="flex items-center gap-2">
+                  <Select
+                    value={insumo.productId}
+                    onValueChange={(val) => {
+                      if (val) updateInsumo(index, "productId", val);
+                    }}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Seleccionar insumo">
+                        {product ? `${product.name} (${product.stock} ${product.unit})` : undefined}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProducts.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name} ({p.stock} {p.unit})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={product?.stock ?? 1}
+                    value={insumo.quantity}
+                    onChange={(e) =>
+                      updateInsumo(index, "quantity", parseInt(e.target.value) || 1)
+                    }
+                    className="w-20"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => removeInsumo(index)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

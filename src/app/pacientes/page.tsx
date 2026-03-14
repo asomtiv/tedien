@@ -6,9 +6,14 @@ import { NewPatientDialog } from "@/components/patients/new-patient-dialog";
 import { MedicalRecordDialog } from "@/components/patients/medical-record-dialog";
 
 export default async function PacientesPage() {
-  const patients = await prisma.patient.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const [patients, provinces, socialInsurances] = await Promise.all([
+    prisma.patient.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { province: true, socialInsurance: true },
+    }),
+    prisma.province.findMany({ orderBy: { name: "asc" } }),
+    prisma.socialInsurance.findMany({ orderBy: { name: "asc" } }),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -16,11 +21,15 @@ export default async function PacientesPage() {
         <h2 className="text-3xl font-bold tracking-tight">Pacientes</h2>
         <div className="flex items-center gap-3">
           <MedicalRecordDialog />
-          <NewPatientDialog />
+          <NewPatientDialog provinces={provinces} socialInsurances={socialInsurances} />
         </div>
       </div>
 
-      <RecentPatientsTable patients={patients} />
+      <RecentPatientsTable
+        patients={patients}
+        provinces={provinces}
+        socialInsurances={socialInsurances}
+      />
     </div>
   );
 }

@@ -10,14 +10,22 @@ export async function createPatient(formData: FormData) {
   const phone = (formData.get("phone") as string) || null;
   const email = (formData.get("email") as string) || null;
   const notes = (formData.get("notes") as string) || null;
+  const address = (formData.get("address") as string) || null;
+  const locality = (formData.get("locality") as string) || null;
+  const birthDateRaw = (formData.get("birthDate") as string) || null;
+  const provinceId = (formData.get("provinceId") as string) || null;
+  const socialInsuranceId = (formData.get("socialInsuranceId") as string) || null;
 
   if (!firstName || !lastName || !dni) {
     return { error: "Nombre, Apellido y DNI son obligatorios" };
   }
 
+  const birthDate = birthDateRaw ? new Date(birthDateRaw) : null;
+
   await prisma.patient.create({
     data: {
       firstName, lastName, dni, phone, email, notes,
+      address, locality, birthDate, provinceId, socialInsuranceId,
       clinicalHistory: { create: {} },
     },
   });
@@ -34,14 +42,21 @@ export async function updatePatient(id: string, formData: FormData) {
   const phone = (formData.get("phone") as string) || null;
   const email = (formData.get("email") as string) || null;
   const notes = (formData.get("notes") as string) || null;
+  const address = (formData.get("address") as string) || null;
+  const locality = (formData.get("locality") as string) || null;
+  const birthDateRaw = (formData.get("birthDate") as string) || null;
+  const provinceId = (formData.get("provinceId") as string) || null;
+  const socialInsuranceId = (formData.get("socialInsuranceId") as string) || null;
 
   if (!firstName || !lastName || !dni) {
     return { error: "Nombre, Apellido y DNI son obligatorios" };
   }
 
+  const birthDate = birthDateRaw ? new Date(birthDateRaw) : null;
+
   await prisma.patient.update({
     where: { id },
-    data: { firstName, lastName, dni, phone, email, notes },
+    data: { firstName, lastName, dni, phone, email, notes, address, locality, birthDate, provinceId, socialInsuranceId },
   });
 
   revalidatePath("/pacientes");

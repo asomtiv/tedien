@@ -1,52 +1,64 @@
+import path from "path";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
+const dbPath = path.join(process.cwd(), "dev.db");
 const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({ url: "file:./dev.db" }),
+  adapter: new PrismaBetterSqlite3({ url: `file:${dbPath}` }),
 });
 
-const specialties = [
-  "Odontología General",
-  "Cirugía",
-  "Endodoncia",
-  "Ortodoncia",
-  "Odontopediatría",
-  "Prótesis Removible",
-  "Implantes",
+const PROVINCES = [
+  "Buenos Aires",
+  "Catamarca",
+  "Chaco",
+  "Chubut",
+  "Ciudad Autónoma de Buenos Aires",
+  "Córdoba",
+  "Corrientes",
+  "Entre Ríos",
+  "Formosa",
+  "Jujuy",
+  "La Pampa",
+  "La Rioja",
+  "Mendoza",
+  "Misiones",
+  "Neuquén",
+  "Río Negro",
+  "Salta",
+  "San Juan",
+  "San Luis",
+  "Santa Cruz",
+  "Santa Fe",
+  "Santiago del Estero",
+  "Tierra del Fuego",
+  "Tucumán",
 ];
 
-const categories = [
-  "Descartables",
-  "Anestesia",
-  "Resinas",
-  "Instrumental",
-  "Ortodoncia",
-];
+const SOCIAL_INSURANCES = ["IOSFA", "PAMI Veteranos"];
 
 async function main() {
-  for (const name of specialties) {
-    await prisma.specialty.upsert({
+  for (const name of PROVINCES) {
+    await prisma.province.upsert({
       where: { name },
       update: {},
       create: { name },
     });
   }
-  console.log(`Seeded ${specialties.length} specialties`);
 
-  for (const name of categories) {
-    await prisma.category.upsert({
+  for (const name of SOCIAL_INSURANCES) {
+    await prisma.socialInsurance.upsert({
       where: { name },
       update: {},
       create: { name },
     });
   }
-  console.log(`Seeded ${categories.length} categories`);
+
+  console.log("Seed completado: provincias y obras sociales cargadas.");
 }
 
 main()
-  .then(() => prisma.$disconnect())
   .catch((e) => {
     console.error(e);
-    prisma.$disconnect();
     process.exit(1);
-  });
+  })
+  .finally(() => prisma.$disconnect());

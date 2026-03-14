@@ -6,15 +6,8 @@ import { toast } from "sonner";
 import { Clock, Trash2, CalendarX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppointmentFormDialog } from "@/components/agenda/appointment-form-dialog";
-import { deleteAppointment, updateAppointment } from "@/app/actions/appointments";
+import { deleteAppointment } from "@/app/actions/appointments";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface AppointmentWithPatientAndProfessional {
@@ -116,28 +109,14 @@ export function AppointmentsList({
               </p>
             </div>
 
-            <Select
-              value={appointment.status}
-              onValueChange={async (val) => {
-                if (!val) return;
-                await updateAppointment(appointment.id, { status: val });
-                toast.success("Estado actualizado");
-              }}
+            <span
+              className={cn(
+                "inline-flex h-7 shrink-0 items-center rounded-lg px-2.5 text-xs font-medium",
+                config.className
+              )}
             >
-              <SelectTrigger
-                className={cn(
-                  "h-7 w-auto shrink-0 gap-1.5 border-transparent px-2.5 text-xs font-medium capitalize",
-                  config.className
-                )}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="completado">Completado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
+              {config.label}
+            </span>
 
             <div className="flex items-center gap-1 shrink-0">
               <AppointmentFormDialog

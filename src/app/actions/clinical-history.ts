@@ -99,6 +99,7 @@ export async function createEvolution(data: {
   description: string;
   tooth?: string;
   face: string;
+  insumos?: Array<{ productId: string; quantity: number }>;
 }) {
   if (!data.historyId || !data.appointmentId || !data.professionalId || !data.treatment || !data.face) {
     return { error: "Turno, profesional, tratamiento y cara son obligatorios" };
@@ -128,19 +129,62 @@ export async function createEvolution(data: {
     return { error: "Historia clínica no encontrada" };
   }
 
-  await prisma.evolution.create({
-    data: {
-      historyId: data.historyId,
-      appointmentId: data.appointmentId,
-      professionalId: data.professionalId,
-      date: appointment.date,
-      treatment: data.treatment,
-      description: data.description || "",
-      tooth: data.tooth || null,
-      face: data.face,
-    },
-  });
+  const insumos = data.insumos?.filter((i) => i.productId && i.quantity > 0) ?? [];
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.evolution.create({
+        data: {
+          historyId: data.historyId,
+          appointmentId: data.appointmentId,
+          professionalId: data.professionalId,
+          date: appointment.date,
+          treatment: data.treatment,
+          description: data.description || "",
+          tooth: data.tooth || null,
+          face: data.face,
+        },
+      });
+
+      for (const insumo of insumos) {
+        const product = await tx.product.findUnique({
+          where: { id: insumo.productId },
+        });
+
+        if (!product) {
+          throw new Error(`Producto no encontrado`);
+        }
+
+        if (product.stock < insumo.quantity) {
+          throw new Error(`Stock insuficiente para "${product.name}" (disponible: ${product.stock})`);
+        }
+
+        await tx.product.update({
+          where: { id: insumo.productId },
+          data: { stock: product.stock - insumo.quantity },
+        });
+
+        await tx.productMovement.create({
+          data: {
+            productId: insumo.productId,
+            type: "EXIT",
+            quantity: insumo.quantity,
+            reason: "Consulta",
+            appointmentId: data.appointmentId,
+            patientId: appointment.patientId,
+            professionalId: data.professionalId,
+          },
+        });
+      }
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Error al registrar evolución";
+    return { error: message };
+  }
 
   revalidatePath(`/pacientes/${history.patientId}`);
+  if (insumos.length > 0) {
+    revalidatePath("/insumos");
+  }
   return { success: true };
 }
